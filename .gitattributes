@@ -1,0 +1,14 @@
+# Normalise everything to LF in the repository, and check it out as LF on every
+# platform. Windows git defaults to autocrlf=true, which would otherwise hand a
+# CRLF copy of tools/publish.sh to the macOS CI runner.
+* text=auto eol=lf
+
+*.sh    text eol=lf
+*.swift text eol=lf
+*.py    text eol=lf
+*.yml   text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+
+*.png   binary
+*.ipa   binary

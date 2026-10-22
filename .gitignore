@@ -1,0 +1,27 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.ipa
+*.dSYM.zip
+
+# Swift Package Manager
+.swiftpm/
+.build/
+
+# Dev server
+server/library/
+server/__pycache__/
+tools/__pycache__/
+
+# CI output
+out/
+build.log
+.gh-repo/
+
+# OS noise
+.DS_Store
+Thumbs.db
