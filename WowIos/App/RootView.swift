@@ -41,6 +41,13 @@ struct RootView: View {
             didAutoConnect = true
             if settings.isOn(.autoConnectDevLink), !devLink.isConnected {
                 await devLink.connect(host: settings.host, port: settings.port)
+                if !devLink.isConnected {
+                    // Fall back to reading the LocalDevVPN tunnel and probing it.
+                    await devLink.scan(preferring: settings.host, port: settings.port)
+                    if let connected = devLink.lastConnectedHost {
+                        settings.rememberHost(connected)
+                    }
+                }
             }
         }
         .onAppear {

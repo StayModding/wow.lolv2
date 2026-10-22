@@ -19,6 +19,9 @@ final class DevLink {
     var lastConnectedHost: String?
     var busyPackIDs: Set<String> = []
     var message: String?
+    var tunnel: [TunnelInterface] = []
+    var isScanning = false
+    var scanSummary: String?
 
     private var session: URLSession
     private var base: URL?
@@ -40,6 +43,64 @@ final class DevLink {
     var isConnected: Bool {
         if case .connected = status { return true }
         return false
+    }
+
+    static let candidatePorts = [8787, 8080, 8000, 3000, 5000, 9000]
+
+    // MARK: Tunnel
+
+    func refreshTunnel() {
+        tunnel = TunnelProbe.interfaces().filter { $0.name.hasPrefix("utun") }
+    }
+
+    /// Probes every tunnel-derived host against the common dev ports in parallel and
+    /// connects to the first one that answers /api/health.
+    @discardableResult
+    func scan(preferring host: String, port: Int) async -> Bool {
+        guard !isScanning else { return false }
+        isScanning = true
+        defer { isScanning = false }
+
+        refreshTunnel()
+        let hosts = TunnelProbe.candidates(extra: [host])
+        let ports = Array(Set([port] + Self.candidatePorts)).sorted()
+        let pairs = hosts.flatMap { candidate in ports.map { (candidate, $0) } }
+        let session = self.session
+
+        var winner: (host: String, port: Int)?
+        await withTaskGroup(of: (host: String, port: Int)?.self) { group in
+            for pair in pairs {
+                group.addTask {
+                    await Self.reachable(session: session, host: pair.0, port: pair.1) ? pair : nil
+                }
+            }
+            for await result in group {
+                if let result {
+                    winner = result
+                    group.cancelAll()
+                    break
+                }
+            }
+        }
+
+        guard let winner else {
+            status = .failed("No dev server answered on \(hosts.count) hosts × \(ports.count) ports.")
+            scanSummary = "Scanned \(hosts.joined(separator: ", ")) on ports \(ports.map(String.init).joined(separator: ", "))."
+            return false
+        }
+
+        await connect(host: winner.host, port: winner.port)
+        scanSummary = "Found the dev server at \(winner.host):\(winner.port)"
+        return isConnected
+    }
+
+    nonisolated private static func reachable(session: URLSession, host: String, port: Int) async -> Bool {
+        guard let url = URL(string: "http://\(host):\(port)/api/health") else { return false }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 0.9
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        guard let (_, response) = try? await session.data(for: request) else { return false }
+        return (response as? HTTPURLResponse)?.statusCode == 200
     }
 
     // MARK: Connection

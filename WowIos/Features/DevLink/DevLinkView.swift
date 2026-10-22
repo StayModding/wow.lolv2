@@ -11,6 +11,7 @@ struct DevLinkView: View {
     @State private var portText = "8787"
     @State private var busy = false
     @State private var pulling = false
+    @State private var didAutoScan = false
     @State private var errorMessage: String?
     @State private var toast: String?
 
@@ -20,6 +21,7 @@ struct DevLinkView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: theme.sectionSpacing) {
+                    tunnelCard
                     connectionCard
                     recentCard
                     packSection
@@ -45,10 +47,90 @@ struct DevLinkView: View {
                 }
             }
             .onAppear {
-                if host.isEmpty { host = settings.host }
+                if host.isEmpty {
+                    host = settings.host
+                }
                 portText = String(settings.port)
+                devLink.refreshTunnel()
+            }
+            .task { await autoScanIfNeeded() }
+        }
+    }
+
+    // MARK: Tunnel
+
+    private var tunnelCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                SectionHeader(title: "LocalDevVPN",
+                              caption: devLink.tunnel.isEmpty
+                              ? "No tunnel interface yet"
+                              : "Read straight from the interface table")
+                Button {
+                    Task { await scan() }
+                } label: {
+                    if devLink.isScanning {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Text("Scan")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(theme.accent)
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(devLink.isScanning)
+            }
+
+            if devLink.tunnel.isEmpty {
+                Text("Open LocalDevVPN and connect, then scan. The app reads the utun address and derives the peer (10.7.0.1 → 10.7.1.1) on its own.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                ForEach(devLink.tunnel) { interface in
+                    HStack(spacing: 8) {
+                        Image(systemName: "point.3.connected.trianglepath.dotted")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(theme.accentSecondary)
+                        Text(interface.name)
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(interface.address)
+                            .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                    }
+                }
+            }
+
+            if let summary = devLink.scanSummary {
+                Text(summary)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .chromeSurface()
+    }
+
+    private func autoScanIfNeeded() async {
+        guard !didAutoScan, !devLink.isConnected else { return }
+        didAutoScan = true
+        devLink.refreshTunnel()
+        guard !devLink.tunnel.isEmpty else { return }
+        await scan()
+    }
+
+    private func scan() async {
+        let port = Int(portText.trimmingCharacters(in: .whitespaces)) ?? settings.port
+        let found = await devLink.scan(preferring: host, port: port)
+        guard found, let connected = devLink.lastConnectedHost else { return }
+        let parts = connected.split(separator: ":")
+        host = parts.first.map(String.init) ?? host
+        if parts.count > 1 { portText = String(parts[1]) }
+        settings.host = host
+        if let parsed = Int(portText) { settings.port = parsed }
+        settings.rememberHost(connected)
+        Haptics.success()
     }
 
     // MARK: Connection
@@ -264,8 +346,8 @@ struct DevLinkView: View {
                           caption: "No cloud, no account")
             VStack(alignment: .leading, spacing: 6) {
                 bullet("1", "Run the dev server on your machine: python server/devserver.py --port 8787")
-                bullet("2", "Point your dev VPN at 127.0.0.1:8787, or use the tunnel address it hands the phone.")
-                bullet("3", "Enter that host and port here. wow-ios calls /api/manifest and streams packs over plain HTTP on your private network.")
+                bullet("2", "Connect LocalDevVPN. The phone sits on 10.7.0.1 and the host is routed at 10.7.1.1; Scan reads the utun address and probes that peer for you.")
+                bullet("3", "wow-ios calls /api/manifest and streams packs byte for byte over plain HTTP on the tunnel, then converts any MP4 into a Live Photo locally.")
             }
         }
         .chromeSurface()
@@ -298,6 +380,10 @@ struct DevLinkView: View {
             settings.host = host.trimmingCharacters(in: .whitespaces)
             settings.port = port
             settings.rememberHost("\(settings.host):\(port)")
+            Haptics.success()
+        } else if !devLink.tunnel.isEmpty {
+            // The typed address did not answer; let the tunnel scan find the server.
+            await scan()
         }
     }
 

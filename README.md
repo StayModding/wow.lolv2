@@ -79,7 +79,17 @@ server/library/
     still.jpg      optional paired still
 ```
 
-`GET /api/manifest` → `{version, name, packs[]}`; files support `Range` (206). Bind is `0.0.0.0`, so forward the port through your tunnel and enter that host in the app.
+`GET /api/manifest` → `{version, name, packs[]}`; files support `Range` (206). Bind is `0.0.0.0`, so whatever the tunnel forwards, it answers.
+
+### It reads LocalDevVPN by itself
+
+The shipped tunnel gives the phone `10.7.0.1/32` and routes `10.7.1.1/32` to the host machine. wow-ios does not make you type that in: `TunnelProbe` reads the interface table with `getifaddrs`, derives the peer for every `utun` address (next third octet: `10.7.0.1` → `10.7.1.1`), then probes those hosts against `8787 · 8080 · 8000 · 3000 · 5000 · 9000` in parallel. The first `/api/health` returning 200 wins, the app connects, and the Dev Link tab lists the detected interfaces.
+
+1. Connect LocalDevVPN on the phone.
+2. Run `python server/devserver.py --port 8787` on the machine.
+3. Open **Dev Link** (it auto-scans once on first appearance) or tap **Scan**. Use the tray-and-arrow button to pull every pack, then convert any clip to a Live Photo.
+
+A QR code can do the same thing: `wowios://connect?host=10.7.1.1&port=8787`.
 
 ## Layout
 
