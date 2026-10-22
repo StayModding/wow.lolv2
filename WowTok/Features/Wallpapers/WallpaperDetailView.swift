@@ -393,7 +393,7 @@ struct WallpaperDetailView: View {
                 return
             }
             guard let pack = wallpaper.pack else { return }
-            guard let still = pack.still ?? pack.preview else { return }
+            let still = pack.still ?? pack.preview
             let downloaded = try await devLink.download(still, for: pack)
             let prepared = try LivePhotoBuilder.makeStill(fromImage: downloaded, options: settings.livePhotoOptions)
             try await LivePhotoBuilder.savePhotoToLibrary(prepared)
