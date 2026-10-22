@@ -1,14 +1,14 @@
 # Tweaks: what each switch actually does
 
-`TweakCatalog` (in `WowTok/Core/Tweak.swift`) is the single list. `AppSettings` persists the enabled set, and `AppSettings.theme` collapses it into a `Theme` value that the whole UI reads through the `\.theme` environment key. Flipping a switch re-resolves the theme, so chrome changes are live — no relaunch.
+`TweakCatalog` (in `WowIos/Core/Tweak.swift`) is the single list. `AppSettings` persists the enabled set, and `AppSettings.theme` collapses it into a `Theme` value that the whole UI reads through the `\.theme` environment key. Flipping a switch re-resolves the theme, so chrome changes are live — no relaunch.
 
 ## Killing Liquid Glass in three layers
 
-iOS 26+ draws Liquid Glass in system views the app does not own. You cannot "turn it off" with a runtime switch from inside a sandboxed app, so wow.tok attacks it in the three places an app legitimately can:
+iOS 26+ draws Liquid Glass in system views the app does not own. You cannot "turn it off" with a runtime switch from inside a sandboxed app, so wow-ios attacks it in the three places an app legitimately can:
 
 1. **Opt out of the redesign** — `UIDesignRequiresCompatibility = true` in `Info.plist`. The system renders the pre-26 chrome for this process, which is the closest thing to an official "no Liquid Glass" flag. Set it to `false` to compare.
 2. **Fill in behind everything the app owns** — `ChromeSurface` stops asking for `.ultraThinMaterial` and paints `theme.surface` instead, with a hairline stroke standing in for the glass edge. `ChromeBars` does the same to the navigation bar and tab bar. Visually there is no glass left, and the hairlines keep the layering readable so flat chrome doesn't look unfinished.
-3. **Everything else is SpringBoard's** — Dock, Control Center, notifications, system apps. Those views live in another process. wow.tok writes an injection profile rather than shipping a toggle that silently does nothing.
+3. **Everything else is SpringBoard's** — Dock, Control Center, notifications, system apps. Those views live in another process. wow-ios writes an injection profile rather than shipping a toggle that silently does nothing.
 
 That is why three chrome tweaks are `scope: .injection`: they are honestly labelled, and you can see exactly which side of the line they fall on.
 
@@ -39,7 +39,7 @@ That is why three chrome tweaks are `scope: .injection`: they are honestly label
 
 ```json
 {
-  "app": "wow.tok",
+  "app": "wow-ios",
   "profileVersion": 1,
   "generatedAt": "2026-10-22T17:40:00Z",
   "targets": [
@@ -55,7 +55,7 @@ That is why three chrome tweaks are `scope: .injection`: they are honestly label
 }
 ```
 
-Your dev VPN / injection loader reads the profile, applies the system patches, and can use `appTweaks` to mirror the same look inside the app. wow.tok never patches SpringBoard itself and never claims to.
+Your dev VPN / injection loader reads the profile, applies the system patches, and can use `appTweaks` to mirror the same look inside the app. wow-ios never patches SpringBoard itself and never claims to.
 
 ## Adding a tweak
 

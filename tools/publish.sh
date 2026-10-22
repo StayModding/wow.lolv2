@@ -8,7 +8,7 @@
 # the first time you push. Nothing is deleted; this only adds and commits files.
 set -euo pipefail
 
-REMOTE="${1:-https://github.com/StayModding/wow.lolv2.git}"
+REMOTE="${1:-https://github.com/StayModding/wow-ios.git}"
 BRANCH="main"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
@@ -26,6 +26,12 @@ else
   git remote add origin "$REMOTE"
 fi
 echo "-> remote origin = $REMOTE"
+
+if ! git ls-remote --exit-code origin >/dev/null 2>&1; then
+  echo "!! origin is not reachable yet: $REMOTE"
+  echo "   rename the repo to wow-ios on GitHub, or pass the real URL:"
+  echo "   bash tools/publish.sh https://github.com/<you>/<repo>.git"
+fi
 
 if ! git config user.email >/dev/null || [ -z "$(git config user.email)" ]; then
   read -r -p "git email for commits: " EMAIL
@@ -55,7 +61,7 @@ git add -A
 if git diff --cached --quiet; then
   echo "-> nothing new to commit, pushing existing commits"
 else
-  git commit -m "wow.tok: wallpapers, Live Photo pipeline, tweaks and dev server" >/dev/null
+  git commit -m "wow-ios: wallpapers, Live Photo pipeline, tweaks and dev server" >/dev/null
   echo "-> committed"
 fi
 
@@ -74,9 +80,10 @@ fi
 cat <<'DONE'
 
 Pushed. Next:
-  1. open the repo -> Actions -> "Build unsigned IPA" (it starts on its own on push)
-  2. download the WowTok-unsigned-ipa artifact when the run is green
+  1. open the repo -> Actions -> "Build unsigned IPA" (starts on its own on push)
+  2. download the WowIos-unsigned-ipa artifact when the run is green
   3. sign it with your dev VPN / sideload tool, then install
+  4. tag it for a Release: git tag v1 && git push --tags
 
 If a build fails, grab the build-log artifact: it has the full xcodebuild output.
 DONE

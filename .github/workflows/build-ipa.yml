@@ -25,12 +25,12 @@ jobs:
           xcode-select -p
           xcrun --sdk iphoneos --show-sdk-version
 
-      - name: Build WowTok.app
+      - name: Build WowIos.app
         run: |
           set -o pipefail
           xcodebuild \
-            -project WowTok.xcodeproj \
-            -scheme WowTok \
+            -project WowIos.xcodeproj \
+            -scheme WowIos \
             -configuration Release \
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
@@ -44,9 +44,9 @@ jobs:
       - name: Package Payload into an unsigned .ipa
         run: |
           set -euo pipefail
-          APP="build/Build/Products/Release-iphoneos/WowTok.app"
+          APP="build/Build/Products/Release-iphoneos/WowIos.app"
           if [ ! -d "$APP" ]; then
-            echo "::error::No WowTok.app produced. Last 80 lines of the build log:"
+            echo "::error::No WowIos.app produced. Last 80 lines of the build log:"
             tail -n 80 build.log
             exit 1
           fi
@@ -54,15 +54,15 @@ jobs:
           mkdir -p out/Payload
           cp -R "$APP" out/Payload/
           cd out
-          zip -qry WowTok-unsigned.ipa Payload
-          unzip -l WowTok-unsigned.ipa | head -n 20
-          echo "IPA size: $(du -h WowTok-unsigned.ipa | cut -f1)"
+          zip -qry WowIos-unsigned.ipa Payload
+          unzip -l WowIos-unsigned.ipa | head -n 20
+          echo "IPA size: $(du -h WowIos-unsigned.ipa | cut -f1)"
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: WowTok-unsigned-ipa
-          path: out/WowTok-unsigned.ipa
+          name: WowIos-unsigned-ipa
+          path: out/WowIos-unsigned.ipa
           if-no-files-found: error
           retention-days: 30
 

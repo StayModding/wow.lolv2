@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-wow.tok dev wallpaper server.
+wow-ios dev wallpaper server.
 
-Serves a pack manifest and raw media over HTTP so the wow.tok iOS app can pull
+Serves a pack manifest and raw media over HTTP so the wow-ios iOS app can pull
 wallpapers through whatever local VPN tunnel you have running.
 
     python server/devserver.py --port 8787
@@ -103,7 +103,7 @@ def seed_demo() -> None:
                     {
                         "title": title,
                         "kind": "photo",
-                        "author": "wow.tok demo",
+                        "author": "wow-ios demo",
                         "tags": ["gradient", "demo"],
                         "allowDownload": True,
                         "hd": True,
@@ -213,7 +213,7 @@ def manifest() -> dict:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "wowtok-dev/1.0"
+    server_version = "wowios-dev/1.0"
     protocol_version = "HTTP/1.1"
 
     def log_message(self, fmt: str, *args) -> None:  # noqa: A003
@@ -238,7 +238,7 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/api"):
             self._json(
                 {
-                    "app": "wow.tok dev server",
+                    "app": "wow-ios dev server",
                     "endpoints": ["/api/health", "/api/manifest", "/files/<pack>/<file>"],
                     "library": str(LIBRARY),
                 }
@@ -342,7 +342,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main() -> int:
     global LIBRARY
-    parser = argparse.ArgumentParser(description="wow.tok local wallpaper server")
+    parser = argparse.ArgumentParser(description="wow-ios local wallpaper server")
     parser.add_argument("--port", type=int, default=8787)
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--library", type=Path, default=LIBRARY)
@@ -359,7 +359,7 @@ def main() -> int:
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     server.daemon_threads = True
 
-    print(f"wow.tok dev server on http://{args.host}:{args.port}")
+    print(f"wow-ios dev server on http://{args.host}:{args.port}")
     print(f"library: {LIBRARY} ({len(packs)} packs)")
     for pack in packs:
         print(f"  · {pack['id']:<18} {pack['kind']:<6} {pack['preview']}")

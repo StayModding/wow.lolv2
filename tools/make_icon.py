@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Generates the wow.tok app icon (1024x1024 PNG) without any image libraries."""
+"""Generates the wow-ios app icon (1024x1024 PNG) without any image libraries."""
 import math
 import struct
 import zlib
 from pathlib import Path
 
 SIZE = 1024
-OUT = Path(__file__).resolve().parent.parent / "WowTok/Assets.xcassets/AppIcon.appiconset/icon-1024.png"
+OUT = Path(__file__).resolve().parent.parent / "WowIos/Assets.xcassets/AppIcon.appiconset/icon-1024.png"
 
 
 def lerp(a, b, t):

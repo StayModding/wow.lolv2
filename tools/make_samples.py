@@ -53,7 +53,7 @@ def write_meta(slug: str, title: str) -> None:
             {
                 "title": title,
                 "kind": "video",
-                "author": "wow.tok samples",
+                "author": "wow-ios samples",
                 "tags": ["mp4", "loop", "demo"],
                 "allowDownload": True,
                 "hd": True,

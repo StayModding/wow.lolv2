@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in wow-ios misbehaves
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. If the build itself failed, attach the `build-log`
+        artifact from the Actions run — it has the full xcodebuild output.
+  - type: input
+    id: device
+    attributes:
+      label: Device and iOS version
+      placeholder: iPhone 15 Pro, iOS 26.1
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Which build
+      placeholder: Actions run #12 / local Xcode build / TestFlight
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Wallpaper import / Live Photo
+        - Export or share
+        - Preset studio
+        - Dev link / dev server
+        - Tweaks
+        - Settings or storage
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      placeholder: |
+        1. Imported a 4K clip
+        2. Dragged the trim handles
+        3. Tapped "Save as Live Photo wallpaper"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened instead
+    validations:
+      required: true

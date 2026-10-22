@@ -60,7 +60,7 @@ def strip_code(text: str) -> str:
 
 
 def main() -> int:
-    files = sorted((ROOT / "WowTok").rglob("*.swift"))
+    files = sorted((ROOT / "WowIos").rglob("*.swift"))
     if not files:
         print("no Swift files found")
         return 1
